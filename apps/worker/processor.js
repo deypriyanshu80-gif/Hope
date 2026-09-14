@@ -40,10 +40,10 @@ const newWorker=new Worker('distress-events',{connection:createWorkerConnections
     const parsedData = JSON.parse(rawContent);
     return parsedData;
 })
-netWorker.on('completed',(job,returnvalue)=>{
+newWorker.on('completed',(job,returnvalue)=>{
  console.log(`[Worker Success] Job #{job.id} parsed:`,returnvalue);
   });
- netWorker.on('failed',(job,err)=>{
+ newWorker.on('failed',(job,err)=>{
     console.log(`[Worker Failiure] Job #{job.id}:`,err);
 
 
