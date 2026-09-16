@@ -26,13 +26,28 @@ location:{
     type:{
         type:String,
         enum:[Point],
-        requored:true,
+        required:true,
     },
     coordinates:{
         enum:['Number'],
         required:true
     },
 },
+
+    geohash:{
+        type:String,
+        unique:true,
+        required:true,
+    },
+coordinates:{
+    type:[Number],
+    required:true,
+},
+incident_count:{
+    type:Number,
+    default:1,
+}
+
 })
 emergencySchema.index({location:'2dsphere'});
 module.exports=mongoose.model('Emergency',emergencySchema);
