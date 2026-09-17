@@ -1,11 +1,11 @@
 const mongoose=require('mongoose');
-const MONGO_URI='//127.0.0.1:27017/disaster_grid';
-const isconnected=true;
+const MONGO_URI='mongodb://127.0.0.1:27017/disaster_grid';
+let isconnected=false;
 const connectDB=async()=>{
     if(isconnected)
         return;
     try{
-        const dbs=await mongoose.connect(process.env.MONGO_URI);
+        const dbs=await mongoose.connect(MONGO_URI);
         mongoose.connection.on('connected',()=>{
             isconnected=true;
         })
