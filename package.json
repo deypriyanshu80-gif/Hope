@@ -13,6 +13,7 @@
     "@bull-board/api": "^9.10.1",
     "@bull-board/express": "^9.10.1",
     "bullmq": "^6.3.4",
+    "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "groq-sdk": "^1.6.0",

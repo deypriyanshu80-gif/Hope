@@ -1,10 +1,12 @@
 const express=require('express');
 const app = express();
 //importing stuff for bullmq
+const http=require('http');
+const {Server}=require('socket.io');
 const { ExpressAdapter } = require('@bull-board/express');
 const { createBullBoard } = require('@bull-board/api');
 const { BullMQAdapter } = require('@bull-board/api/bullMQAdapter');
-const {Queue}=require('bullmq');
+const {Queue,QueueEvents}=require('bullmq');
 const {sharedConnections}=require('../../packages/cofig/redis.js');
 app.use(express.json());
 //instantiating jobDistress queue
@@ -38,10 +40,19 @@ if(jobBuffer.length>0)
     await jobDistress.addBulk(batch);
 }
 }
+const queueEvents=new QueueEvents('distress-events',{
+    connection:sharedConnections, //no createWorkerConnection , since we are only shipping the data recceived by shared pipeline
+})
+QueueEvents.on('completed',({jobId,returnValue})=>{   //ISSUING A GLOBAL MESSAGE ABOUT THE COMPLETION OF JOB
+    console.log(`[Socket] broadcasting job #{jobId} to frontend`);
+    io.emit('emergency-bang',returnValue);
+})
 setInterval((flushBuffer),100);  //100ms
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Ingestion Engine running on port ${PORT}`);
-  console.log(`Bull-Board GUI available at http://localhost:${PORT}/admin/queues`);
-});
+const server=http.createServer(app);
+const io=new Server(server,{cors:{origin:"*"}});
+//app.listen(PORT, () => {console.log(`Ingestion Engine running on port ${PORT}`);console.log(`Bull-Board GUI available at http://localhost:${PORT}/admin/queues`);});
+server.listen(3000,()=>{
+    console.log("Express + server.io listening on port 3000");
+})
 

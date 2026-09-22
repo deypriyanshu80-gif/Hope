@@ -5,6 +5,8 @@ const {connectDB}=require('../../packages/cofig/db');
 
 const {sharedConnections,createWorkerConnections}=require('../../packages/cofig/redis.js');
 const {Worker}=require('bullmq');
+const ngeohash = require('ngeohash');
+const Emergency = require('../../models/Emergency');
 const Groq=require('groq-sdk');
 const groq=new Groq({
     apikey:process.env.GROQ_API_KEY,
@@ -16,7 +18,9 @@ const groq=new Groq({
     try{
         await connectDB();
         console.log("[Worker] DB connection established...");
-const newWorker=new Worker('distress-events',{connection:createWorkerConnections()},async(job)=>{
+const newWorker=new Worker('distress-events',{
+    connection:createWorkerConnections()
+    },async(job)=>{
     const txt=job.data.rawText;
     const chatCompletions=await groq.chat.completions.create({
         messages:[
@@ -47,7 +51,7 @@ const newWorker=new Worker('distress-events',{connection:createWorkerConnections
     // we need to get the correct json text from gorq to move further so,
     const rawContent=chatCompletions.choices[0].message?.content;
     const parsedData = JSON.parse(rawContent);
-    const gridId=ngeohash.encode(parsedData.latitude,parsedData.longitude,7);
+    const gridId=ngeohash.encode(parsedData.longitude,parsedData.latitude,7);
     const EmergencyNode=await Emergency.findOneAndUpdate(
         //searching of the grid
         {
