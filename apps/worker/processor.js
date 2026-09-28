@@ -6,7 +6,7 @@ const {connectDB}=require('../../packages/cofig/db');
 const {sharedConnections,createWorkerConnections}=require('../../packages/cofig/redis.js');
 const {Worker}=require('bullmq');
 const ngeohash = require('ngeohash');
-const Emergency = require('../../models/Emergency');
+const Emergency = require('../../packages/shared-type/Emergency');
 const Groq=require('groq-sdk');
 const groq=new Groq({
     apikey:process.env.GROQ_API_KEY,
