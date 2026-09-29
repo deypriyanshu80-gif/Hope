@@ -25,10 +25,11 @@ type:String,
 location:{
     type:{
         type:String,
-        enum:[Point],
+        enum:['Point'],
         required:true,
     },
     coordinates:{
+        type:String,
         enum:['Number'],
         required:true
     },

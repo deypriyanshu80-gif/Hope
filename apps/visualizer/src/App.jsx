@@ -13,8 +13,7 @@ return () => {
     };
   }, []);
 
-return
-(
+return(
   <div>
     <h1>HOPE</h1>
     <pre>{JSON.stringify(emergencies,null,2)}</pre>

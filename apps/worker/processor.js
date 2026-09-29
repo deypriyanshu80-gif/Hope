@@ -1,4 +1,7 @@
-require('dotenv').config();
+const path = require('path');
+require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
+
+console.log("DEBUG API KEY:", process.env.GROQ_API_KEY);
 const mongoose=require('mongoose');
 const {connectDB}=require('../../packages/cofig/db');
 
@@ -6,7 +9,7 @@ const {connectDB}=require('../../packages/cofig/db');
 const {sharedConnections,createWorkerConnections}=require('../../packages/cofig/redis.js');
 const {Worker}=require('bullmq');
 const ngeohash = require('ngeohash');
-const Emergency = require('../../packages/shared-type/Emergency');
+const Emergency = require('../../packages/shared-types/Emergency');
 const Groq=require('groq-sdk');
 const groq=new Groq({
     apikey:process.env.GROQ_API_KEY,
@@ -18,9 +21,7 @@ const groq=new Groq({
     try{
         await connectDB();
         console.log("[Worker] DB connection established...");
-const newWorker=new Worker('distress-events',{
-    connection:createWorkerConnections()
-    },async(job)=>{
+const newWorker=new Worker('distress-events',async(job)=>{
     const txt=job.data.rawText;
     const chatCompletions=await groq.chat.completions.create({
         messages:[
@@ -82,7 +83,10 @@ const newWorker=new Worker('distress-events',{
 },   
     );
  return EmergencyNode;
-});
+},
+{
+    connection:createWorkerConnections()
+    });
 newWorker.on('completed',(job,returnvalue)=>{
  console.log(`[Worker Success] Job #{job.id} parsed:`,returnvalue);
   });
