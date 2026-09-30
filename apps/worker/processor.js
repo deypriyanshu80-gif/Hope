@@ -1,7 +1,8 @@
 const path = require('path');
 require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
+//require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
 
-console.log("DEBUG API KEY:", process.env.GROQ_API_KEY);
+//console.log("DEBUG API KEY:", process.env.GROQ_API_KEY);
 const mongoose=require('mongoose');
 const {connectDB}=require('../../packages/cofig/db');
 
@@ -44,7 +45,7 @@ const newWorker=new Worker('distress-events',async(job)=>{
 
             }
         ],
-        model: 'llama-3.3-70b-versatile',
+        model: 'openai/gpt-oss-20b',
         temperature:0.1,
         response_format:{type:'json_object'},
     })
@@ -52,7 +53,9 @@ const newWorker=new Worker('distress-events',async(job)=>{
     // we need to get the correct json text from gorq to move further so,
     const rawContent=chatCompletions.choices[0].message?.content;
     const parsedData = JSON.parse(rawContent);
-    const gridId=ngeohash.encode(parsedData.longitude,parsedData.latitude,7);
+    const lat= typeof parsedData.latitutude=='Number'?parsedData.latitude:20.5937;
+    const lng=typeof parsedData.longitude=='Number'?parsedData.longitude:78.9629; 
+    const gridId=ngeohash.encode(lat,lng,7);
     const EmergencyNode=await Emergency.findOneAndUpdate(
         //searching of the grid
         {
@@ -72,14 +75,15 @@ const newWorker=new Worker('distress-events',async(job)=>{
                 disaster_type:parsedData.disaster_type,
                 location:{
                     type:'Point',
-                    coordinates:[parsedData.latitude,parsedData.longitude],
+                    coordinates:[lng,lat],
                 }
                 
             }
     },
 {
     upsert:true,  
-    new:true,
+    returnDocument:'after'
+    //new:true,
 },   
     );
  return EmergencyNode;

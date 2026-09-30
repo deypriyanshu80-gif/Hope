@@ -29,8 +29,7 @@ location:{
         required:true,
     },
     coordinates:{
-        type:String,
-        enum:['Number'],
+        type:[Number],
         required:true
     },
 },
