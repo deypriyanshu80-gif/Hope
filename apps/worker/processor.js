@@ -24,6 +24,7 @@ const groq=new Groq({
         console.log("[Worker] DB connection established...");
 const newWorker=new Worker('distress-events',async(job)=>{
     const txt=job.data.rawText;
+    try{
     const chatCompletions=await groq.chat.completions.create({
         messages:[
             {
@@ -53,9 +54,14 @@ const newWorker=new Worker('distress-events',async(job)=>{
     // we need to get the correct json text from gorq to move further so,
     const rawContent=chatCompletions.choices[0].message?.content;
     const parsedData = JSON.parse(rawContent);
-    const lat= typeof parsedData.latitutude=='Number'?parsedData.latitude:20.5937;
+    const lat= typeof parsedData.latitude=='Number'?parsedData.latitude:20.5937;
     const lng=typeof parsedData.longitude=='Number'?parsedData.longitude:78.9629; 
     const gridId=ngeohash.encode(lat,lng,7);
+}
+catch(err){
+console.log(`[Worker] Groq API Failed: ${error.message}`);
+throw err;
+};
     const EmergencyNode=await Emergency.findOneAndUpdate(
         //searching of the grid
         {
@@ -86,8 +92,9 @@ const newWorker=new Worker('distress-events',async(job)=>{
     //new:true,
 },   
     );
+
  return EmergencyNode;
-},
+},//newWorker closed
 {
     connection:createWorkerConnections()
     });
@@ -108,6 +115,7 @@ catch(err){
 
 
     }
+
 })()
 
 

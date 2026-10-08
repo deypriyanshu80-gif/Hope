@@ -20,7 +20,7 @@ const io = new Server(server, {
 const { ExpressAdapter } = require('@bull-board/express');
 const { createBullBoard } = require('@bull-board/api');
 const { BullMQAdapter } = require('@bull-board/api/bullMQAdapter');
-const {Queue,QueueEvents}=require('bullmq');
+const {Queue,QueueEvents, Backoffs}=require('bullmq');
 const {sharedConnections}=require('../../packages/cofig/redis.js');
 app.use(express.json());
 //instantiating jobDistress queue
@@ -49,7 +49,17 @@ app.post('/api/ingest',async(req,res)=>{
 async function flushBuffer(){
 if(jobBuffer.length>0)
 {
-    const batch=jobBuffer;
+    const batch=jobBuffer.map(job=>({
+        ...job,
+        opts:{
+            attempts:5,
+            backoff:{
+                type: 'exponential',
+          delay: 2000
+            },
+            removeOnComplete: true,
+        }
+    }))
     jobBuffer=[];
     await jobDistress.addBulk(batch);
 }
