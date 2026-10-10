@@ -1,7 +1,9 @@
-import { useState,useEffect } from 'react'
+import { useState,useEffect,useRef } from 'react';
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import socket from './socket';
 function App(){
   const [emergencies,setEmergencies]=useState([]);
+  const incomingBuff=useRef([]);
  useEffect(() => {
     //listening down the socket
     socket.on('connect',()=>{
@@ -9,13 +11,29 @@ function App(){
     })
     socket.on('emergency-update', (newDisasterNode) => {
       //a new distaster is directly stored in the array
+      if(newDisasterNode)
+      {
+        incomingBuff.current.push(newDisasterNode);    //icomingBuff is an object not an array , current is the array in incomBuff
+                                                      //we hence push the new disaster info to incomingBuff.current.push and not directly to
+                                                      //incomingBuff
+        
+      }
+
       console.log('[Visualizer] Received Socket Event:', newDisasterNode);
-      setEmergencies((prev) => [...prev, newDisasterNode]);
+      
     });
+    const render=setInterval(()=>{
+      if(incomingBuff.current.length>0)
+      {
+        setEmergencies((prev) => [...prev,...incomingBuff.current]); //appending to the existing useState with newDisasterNpde from incomingBuff
+        incomingBuff.current=[]; //clearing the buffer
+      }
+    },1000)
 return () => {
   socket.off('connect');
       socket.off('emergency-update');
       socket.off('disconnect');
+      clearInterval(render);
     };
   }, []);
 

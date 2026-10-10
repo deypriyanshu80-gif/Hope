@@ -59,7 +59,7 @@ const newWorker=new Worker('distress-events',async(job)=>{
     const gridId=ngeohash.encode(lat,lng,7);
 }
 catch(err){
-console.log(`[Worker] Groq API Failed: ${error.message}`);
+console.log(`[Worker] Groq API Failed: ${err.message}`);
 throw err;
 };
     const EmergencyNode=await Emergency.findOneAndUpdate(
