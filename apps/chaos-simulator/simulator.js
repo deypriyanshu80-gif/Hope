@@ -1,7 +1,7 @@
 
 async function chaostester(){
   try{
-  const reader=Array.from({length:50}).map(()=>
+  const reader=Array.from({length:5}).map(()=>
    fetch("http://localhost:3000/api/ingest",{
     method:'POST',
     headers:{
@@ -22,7 +22,7 @@ async function chaostester(){
   
 }catch(err)
 {
-console.log("error in getting the 500 requests",err);
+console.log("error in getting the 50 requests",err);
 
 }
 
@@ -30,7 +30,7 @@ console.log("error in getting the 500 requests",err);
   
   
 }
-setInterval(chaostester,1000);
+setInterval(chaostester,2000);
 
 
 
