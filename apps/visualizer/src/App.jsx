@@ -41,10 +41,11 @@ return () => {
 return(
   <div style={{ height: '100vh', width: '100vw', margin: 0, padding: 0, position: 'absolute', top: 0, left: 0 }}>
     
+    
     <MapContainer
     center={[20.5937, 78.9629]} // Centered on India
     zoom={5} 
-    style={{ height: '100%', width: '100%' }}>
+    style={{ height: '100vh', width: '100vw' }}>
 
       <TileLayer
       url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"

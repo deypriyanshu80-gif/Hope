@@ -24,6 +24,7 @@ const groq=new Groq({
         console.log("[Worker] DB connection established...");
 const newWorker=new Worker('distress-events',async(job)=>{
     const txt=job.data.rawText;
+    let parsedData;
     try{
     const chatCompletions=await groq.chat.completions.create({
       messages: [
@@ -52,7 +53,7 @@ const newWorker=new Worker('distress-events',async(job)=>{
 
     // we need to get the correct json text from gorq to move further so,
     const rawContent=chatCompletions.choices[0].message?.content;
-    const parsedData = JSON.parse(rawContent);
+     parsedData = JSON.parse(rawContent);
     }
 catch(aiError){
 console.log(`[Worker] Groq API Failed: ${aiError.message}`);

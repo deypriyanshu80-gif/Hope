@@ -67,8 +67,8 @@ if(jobBuffer.length>0)
 const queueEvents=new QueueEvents('distress-events',{
     connection:sharedConnections, //no createWorkerConnection , since we are only shipping the data recceived by shared pipeline
 })
-queueEvents.on('completed',({jobId,returnValue})=>{   //ISSUING A GLOBAL MESSAGE ABOUT THE COMPLETION OF JOB
-    const parsedNode=typeof returnValue=='string'?JSON.parse(returnValue):returnValue;
+queueEvents.on('completed',({jobId,returnvalue})=>{   //ISSUING A GLOBAL MESSAGE ABOUT THE COMPLETION OF JOB
+    const parsedNode=typeof returnvalue=='string'?JSON.parse(returnvalue):returnvalue;
     console.log(`[Socket] broadcasting job #{jobId} to frontend`);
     io.emit('emergency-update',parsedNode);
 })

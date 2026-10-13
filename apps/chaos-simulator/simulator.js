@@ -17,7 +17,7 @@ async function chaostester(){
   })
 )
   const response=await Promise.all(reader);  //fetch everything at the same time , in this case , batch of 50 alerts
-  console.log(`Blasted ${response.length} requests at once`);
+  console.log("Intercepted 500 requests at 1 sec");
 
   
 }catch(err)
