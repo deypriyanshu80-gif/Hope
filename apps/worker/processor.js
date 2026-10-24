@@ -81,7 +81,7 @@ parsedData={
         },
         {
          
-            $inc:{
+                     $inc:{
                 incident_count:1,
             },
             //occurs if the grid does not exist,creates a brand new cluster
@@ -108,10 +108,10 @@ parsedData={
  return EmergencyNode;
 
    
-},//newWorker closed
+},
 {
     connection:createWorkerConnections()
-    });
+    });//newWorker closed
 newWorker.on('completed',(job,returnvalue)=>{
  console.log(`[Worker Success] Job #{job.id} parsed:`,returnvalue);
   });
