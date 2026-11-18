@@ -13,7 +13,7 @@ const ngeohash = require('ngeohash');
 const Emergency = require('../../packages/shared-types/Emergency');
 const Groq=require('groq-sdk');
 const groq=new Groq({
-    apikey:process.env.GROQ_API_KEY,
+    apiKey:process.env.GROQ_API_KEY,
 });
 //distress-events=queue name
 //process-distress=individual job name
@@ -63,12 +63,23 @@ if(lower.includes("trapped")||lower.includes("sos")||lower.includes("flood"))
 {
     severity="HIGH";
 }
+const FALLBACK_HUBS = [
+    { match: "kolkata", name: "Kolkata, West Bengal", lat: 22.5726, lng: 88.3639, type: "Flash Flood" },
+    { match: "uttarakhand", name: "Joshimath, Uttarakhand", lat: 30.5506, lng: 79.5660, type: "Landslide" },
+    { match: "mumbai", name: "Mumbai, Maharashtra", lat: 19.0760, lng: 72.8777, type: "Structural Collapse" },
+    { match: "chennai", name: "Chennai, Tamil Nadu", lat: 13.0827, lng: 80.2707, type: "Cyclone Surge" },
+    { match: "assam", name: "Guwahati, Assam", lat: 26.1445, lng: 91.7362, type: "River Flood" },
+    { match: "gujarat", name: "Bhuj, Gujarat", lat: 23.2420, lng: 69.6669, type: "Earthquake" },
+    { match: "kerala", name: "Wayanad, Kerala", lat: 11.6854, lng: 76.1320, type: "Mudslide" },
+    { match: "delhi", name: "New Delhi", lat: 28.6139, lng: 77.2090, type: "Flood Alert" }
+  ];
+  const finder=FALLBACK_HUBS.find(h=>lower.includes(h.match))||Math.floor(Math.random()*FALLBACK_HUBS.length);
 parsedData={
-    location_name: "Fallback Grid Location",
-            latitude: 20.5937,
-            longitude: 78.9629,
+    location_name: finder.name,
+           latitude: finder.lat,
+            longitude:finder.lng ,
             severity: severity,
-            disaster_type: lower.includes("flood") ? "Flood" : "Emergency"
+            disaster_type: finder.type,
 };
 };
     const lat= typeof parsedData.latitude=='Number'?parsedData.latitude:20.5937;
