@@ -59,7 +59,7 @@ catch(aiError){
 console.log(`[Worker] Groq API Failed: ${aiError.message}`);
 const lower=txt.toLowerCase();
 let severity="MEDIUM";
-if(lower.includes("trapped")||lower.includes("sos")||lower.includes("flood"))
+if(lower.includes("trapped")||lower.includes("sos")||lower.includes("flood")||lower.includes("collapse"))
 {
     severity="HIGH";
 }
@@ -73,7 +73,7 @@ const FALLBACK_HUBS = [
     { match: "kerala", name: "Wayanad, Kerala", lat: 11.6854, lng: 76.1320, type: "Mudslide" },
     { match: "delhi", name: "New Delhi", lat: 28.6139, lng: 77.2090, type: "Flood Alert" }
   ];
-  const finder=FALLBACK_HUBS.find(h=>lower.includes(h.match))||Math.floor(Math.random()*FALLBACK_HUBS.length);
+  const finder=FALLBACK_HUBS.find(h=>lower.includes(h.match))||FALLBACK_HUBS[Math.floor(Math.random()*FALLBACK_HUBS.length)];
 parsedData={
     location_name: finder.name,
            latitude: finder.lat,
@@ -82,8 +82,8 @@ parsedData={
             disaster_type: finder.type,
 };
 };
-    const lat= typeof parsedData.latitude=='Number'?parsedData.latitude:20.5937;
-    const lng=typeof parsedData.longitude=='Number'?parsedData.longitude:78.9629; 
+    const lat= typeof parsedData.latitude=='number'?parsedData.latitude:20.5937;
+    const lng=typeof parsedData.longitude=='number'?parsedData.longitude:78.9629; 
     const gridId=ngeohash.encode(lat,lng,7);
      const EmergencyNode=await Emergency.findOneAndUpdate(
         //searching of the grid
