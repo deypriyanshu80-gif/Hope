@@ -22,6 +22,11 @@ rawText:{
 type:String,
 
 },
+status:{
+type:String,
+enum: ['ACTIVE', 'RESOLVED'],
+  default: 'ACTIVE',
+},
 location:{
     type:{
         type:String,

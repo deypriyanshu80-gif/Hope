@@ -5,32 +5,39 @@ import socket from './socket';
 function App(){
   const [emergencies,setEmergencies]=useState([]);
   const incomingBuff=useRef([]);
- useEffect(() => {
-    //listening down the socket
-    socket.on('connect',()=>{
-      console.log('[Visualizer] Connected to Socket server with ID:', socket.id);
-    })
-    socket.on('emergency-update', (newDisasterNode) => {
-      //a new distaster is directly stored in the array
-      if(newDisasterNode)
-      {
-        incomingBuff.current.push(newDisasterNode);    //icomingBuff is an object not an array , current is the array in incomBuff
-                                                      //we hence push the new disaster info to incomingBuff.current.push and not directly to
-                                                      //incomingBuff
-        
-      }
+useEffect(()=>{
+  const onConnect=()=>{
+    console.log("socket connected with ID :",socket.id);
+  };
+const onEmergency=(newDisaster)=>
+{
+  if(newDisaster)
+    incomingBuff.current.push(newDisaster);
+}
+socket.on('connect',onConnect);
+socket.on('emergency-update',onEmergency);
+const render=setInterval(()=>{
+  if(incomingBuff.current.length>0)
+  {
+    const batch=[...incomingBuff.current];
+    incomingBuff.current=[];
+    setEmergencies((prev)=>
+    {
+      const clusterMap=new Map(prev.map((item)=>[item._id,item]));
+      batch.forEach((node)=>{
+        clusterMap.set(node._id,node);
 
-      console.log('[Visualizer] Received Socket Event:', newDisasterNode);
-      
-    });
-    const render=setInterval(()=>{
-      if(incomingBuff.current.length>0)
-      {
-        setEmergencies((prev) => [...prev,...incomingBuff.current]); //appending to the existing useState with newDisasterNpde from incomingBuff
-        incomingBuff.current=[]; //clearing the buffer
-      }
-    },1000)
+      });
+      return Array.from(clusterMap.values());//array with the node._ids
     })
+  }
+},1000)
+return ()=>{
+  socket.off('connect',onConnect);
+  socket.off('emergency-update',onEmergency);
+  clearInterval(render);
+}
+},[]);
 return (
   <div style={{ display: 'flex', flexDirection: 'row', overflow: 'hidden', margin: 0, height: '100vh', width: '100vw' }}>
     

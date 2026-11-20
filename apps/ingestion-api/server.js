@@ -1,3 +1,6 @@
+import { connectDB } from '../../packages/cofig/db.js';
+import Emergency from '../../packages/shared-types/Emergency.js';
+
 const express=require('express');
 const app = express();
 //importing stuff for bullmq

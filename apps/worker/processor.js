@@ -95,6 +95,9 @@ parsedData={
                      $inc:{
                 incident_count:1,
             },
+            $set:{
+                status:'ACTIVE',
+            },
             //occurs if the grid does not exist,creates a brand new cluster
             $setOnInsert:{
                 sourceId:job.data.sourceId,
