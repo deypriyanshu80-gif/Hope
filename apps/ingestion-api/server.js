@@ -1,9 +1,15 @@
-import { connectDB } from '../../packages/cofig/db.js';
-import Emergency from '../../packages/shared-types/Emergency.js';
+const { connectDB }= require('../../packages/cofig/db.js');
+const Emergency = require('../../packages/shared-types/Emergency.js');
+const path = require('path');
+require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
 
 const express=require('express');
 const app = express();
 //importing stuff for bullmq
+connectDB();
+//to allow the patch request
+const cors = require('cors');
+app.use(cors());
 
 const {Server}=require('socket.io');
 
@@ -64,15 +70,42 @@ if(jobBuffer.length>0)
         }
     }))
     jobBuffer=[];
-    await jobDistress.addBulk(batch);
+    await jobDistress.addBulk(batch);//redis queue hochhe jobDistress
 }
+}//resolve messages logic
+app.patch('/api/emergencies/:id/resolve',async(req,res)=>
+{
+try{
+    const {id}=req.params;
+const update=await Emergency.findByIdAndUpdate(id,
+    {
+        status:'RESOLVED',
+    },
+    {
+        new:true,
+    },
+
+)
+if(!update)
+{
+    return res.status(404).json({error:"Emergency cluster not found"});
 }
+io.emit('resolved',{id});//broadcasting to everyone else 
+return res.status(200).json(update);
+
+}
+catch(err)
+{
+    console.log("error resolving the message:",err);
+    return res.status(500).json({error:"Emergency cluster failed to resolve"});
+}
+})
 const queueEvents=new QueueEvents('distress-events',{
     connection:sharedConnections, //no createWorkerConnection , since we are only shipping the data recceived by shared pipeline
 })
 queueEvents.on('completed',({jobId,returnvalue})=>{   //ISSUING A GLOBAL MESSAGE ABOUT THE COMPLETION OF JOB
     const parsedNode=typeof returnvalue=='string'?JSON.parse(returnvalue):returnvalue;
-    console.log(`[Socket] broadcasting job #{jobId} to frontend`);
+    console.log(`[Socket] broadcasting job ${jobId} to frontend`);
     io.emit('emergency-update',parsedNode);
 })
 setInterval((flushBuffer),100);  //100ms

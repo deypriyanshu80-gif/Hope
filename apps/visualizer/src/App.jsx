@@ -13,9 +13,16 @@ const onEmergency=(newDisaster)=>
 {
   if(newDisaster)
     incomingBuff.current.push(newDisaster);
-}
+};
+const onRes=({id})=>{
+ incomingBuff.current= incomingBuff.current.filter((item)=>item._id!==id);  //removing it from the 1-s buffer
+  setEmergencies((prev)=>prev.filter((item)=>item._id!==id));//remove its existence from the state
+};
 socket.on('connect',onConnect);
 socket.on('emergency-update',onEmergency);
+//observed and made effets after the emergency was resolved
+socket.on('resolved',onRes);
+
 const render=setInterval(()=>{
   if(incomingBuff.current.length>0)
   {
@@ -35,9 +42,36 @@ const render=setInterval(()=>{
 return ()=>{
   socket.off('connect',onConnect);
   socket.off('emergency-update',onEmergency);
+  socket.off('resolved',onRes);
   clearInterval(render);
 }
 },[]);
+const handleResolve=async(id)=>
+{
+  if(!id)
+    return;
+  try
+  {
+    const response= await fetch(`http://localhost:3000/api/emergencies/${id}/resolve`,{
+      method:'PATCH',
+      headers:
+      {
+        'Content-type':'application/json',
+      }
+
+    }
+    );
+    if(!response.ok)
+    {
+      throw new Error(`Server responded with ${response.status}`);
+    }
+    console.log(`resolved cluster :${id}`);
+  }
+  catch(err)
+  {
+    console.error('Failed to resolve cluster:', err);
+  };
+}
 return (
   <div style={{ display: 'flex', flexDirection: 'row', overflow: 'hidden', margin: 0, height: '100vh', width: '100vw' }}>
     
@@ -102,6 +136,20 @@ return (
                   <strong>{node.disaster_type || 'Emergency'}</strong><br />
                   Severity: {node.severity}<br />
                   Reports: {node.incident_count}
+                  <button onClick={()=>handleResolve(node._id)}
+                    style={{
+                    marginTop: '8px',
+                    padding: '6px 12px',
+                    backgroundColor: '#10b981',
+                    color: '#ffffff',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                     fontWeight: 'bold',
+              width: '100%'
+      }}>
+        RESOLVE AND DISPATCH
+      </button>
                 </Popup>
               </Marker>
             );
