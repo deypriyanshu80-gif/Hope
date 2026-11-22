@@ -31,6 +31,7 @@ const { createBullBoard } = require('@bull-board/api');
 const { BullMQAdapter } = require('@bull-board/api/bullMQAdapter');
 const {Queue,QueueEvents, Backoffs}=require('bullmq');
 const {sharedConnections}=require('../../packages/cofig/redis.js');
+const { timeStamp } = require('console');
 app.use(express.json());
 //instantiating jobDistress queue
 const jobDistress=new Queue('distress-events',{connection:sharedConnections});
@@ -72,7 +73,26 @@ if(jobBuffer.length>0)
     jobBuffer=[];
     await jobDistress.addBulk(batch);//redis queue hochhe jobDistress
 }
-}//resolve messages logic
+}//FIXING THE SWRIPE-AWAY OF CLUSTERS AFTER REFRESHING EACH TIME
+app.get('/api/emergencies',async(req,res)=>
+{
+    try{
+        const refresh=await Emergency.find({
+            status:{$ne:'RESOLVED'}})  //NOT EQUAL TO 'RESOLVED'
+        .sort({timeStamp:-1})
+        .limit(100)
+        return res.status(200).json(refresh);
+    }
+    catch(err)
+    {
+        console.log("error while refreshing:",err);
+        return res.status(500).json({message:'failed to refresh'});
+    }
+})
+
+
+
+//resolve messages logic
 app.patch('/api/emergencies/:id/resolve',async(req,res)=>
 {
 try{

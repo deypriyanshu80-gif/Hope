@@ -1,6 +1,6 @@
 import { useState,useEffect,useRef } from 'react';
 import 'leaflet/dist/leaflet.css';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup,CircleMarker } from 'react-leaflet';
 import socket from './socket';
 function App(){
   const [emergencies,setEmergencies]=useState([]);
@@ -18,6 +18,28 @@ const onRes=({id})=>{
  incomingBuff.current= incomingBuff.current.filter((item)=>item._id!==id);  //removing it from the 1-s buffer
   setEmergencies((prev)=>prev.filter((item)=>item._id!==id));//remove its existence from the state
 };
+const refresh=async()=>{
+  try{
+  const response =await fetch('http://localhost:3000/api/emergencies')
+  if(!response.ok)
+    throw new Error(`http error ${response.status}`);
+  const history=await response.json();
+setEmergencies((prev)=>{
+  const mergedMap=new Map(history.map((item=>[item._id,item])));
+  prev.forEach((liveItem)=>{
+    mergedMap.set(liveItem._id,liveItem);
+
+  }
+)
+return Array.from(mergedMap.values());
+})
+  }
+  catch(err)
+  {
+console.error('[Visualizer] Failed to hydrate emergencies:', err);
+  }
+}
+refresh();
 socket.on('connect',onConnect);
 socket.on('emergency-update',onEmergency);
 //observed and made effets after the emergency was resolved
@@ -71,6 +93,21 @@ const handleResolve=async(id)=>
   {
     console.error('Failed to resolve cluster:', err);
   };
+}
+
+//to recognise the scale of a disater by looking at its marker
+const SEVERITY_COLORS = {
+  CRITICAL: '#ef4444', // Crimson Red
+  HIGH: '#f97316',     // Tactical Orange
+  MEDIUM: '#eab308',   // Warning Yellow
+  LOW: '#3b82f6',      // Info Blue
+};
+const recognise=(node)=>
+{
+  const level=(node.severity||'MEDIUM').toUpperCase();
+  const color=SEVERITY_COLORS[level]||'#eab308';
+  const radius = Math.min(8 + (node.incident_count || 1) * 1.5, 32);
+  return { color, radius };
 }
 return (
   <div style={{ display: 'flex', flexDirection: 'row', overflow: 'hidden', margin: 0, height: '100vh', width: '100vw' }}>
@@ -130,8 +167,17 @@ return (
           emergencies.map((node, idx) => {
             if (!node?.location?.coordinates) return null;
             const [lng, lat] = node.location.coordinates;
+            const {color,radius}=recognise(node);
             return (
-              <Marker key={node._id || idx} position={[lat, lng]}>
+              <CircleMarker key={node._id || idx}
+               center={[lat, lng]}
+               radius={radius}
+               pathOptions={{
+                color: color,       //outer border ring color
+                fillColor: color,   //inner circle fill color
+                fillOpacity: 0.65,  //translucent so overlapping zones stay visible
+                weight: 2,          //border thickness in pixels
+                }}>
                 <Popup>
                   <strong>{node.disaster_type || 'Emergency'}</strong><br />
                   Severity: {node.severity}<br />
@@ -151,7 +197,7 @@ return (
         RESOLVE AND DISPATCH
       </button>
                 </Popup>
-              </Marker>
+              </CircleMarker>
             );
           })
         }
