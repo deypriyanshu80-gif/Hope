@@ -1,10 +1,23 @@
 import { useState,useEffect,useRef } from 'react';
 import 'leaflet/dist/leaflet.css';
-import { MapContainer, TileLayer, Marker, Popup,CircleMarker } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup,CircleMarker,useMap } from 'react-leaflet';
 import socket from './socket';
+function MapFlyController({target}){
+  const map=useMap();
+  useEffect(()=>{
+    if(!target)
+    {
+      return;
+      } 
+       map.flyTo(target,13,{duration:1.2});
+    
+  },[target,map]) //triggered by target(change in target) , map exists.
+
+}
 function App(){
   const [emergencies,setEmergencies]=useState([]);
   const incomingBuff=useRef([]);
+  const[selectedCoords,setSelectedCoords]=useState(null);
 useEffect(()=>{
   const onConnect=()=>{
     console.log("socket connected with ID :",socket.id);
@@ -112,7 +125,7 @@ const recognise=(node)=>
 return (
   <div style={{ display: 'flex', flexDirection: 'row', overflow: 'hidden', margin: 0, height: '100vh', width: '100vw' }}>
     
-    {/* Sidebar */}
+   
     <div style={{ 
       width: '320px',
       backgroundColor: '#16171d', 
@@ -134,17 +147,41 @@ return (
         </p>
       </div>
 
-      {/* Intelligence Feed */}
+      
       <div style={{ flex: 1, overflowY: 'auto', marginTop: '20px', paddingRight: '5px' }}>
         {emergencies.slice(-20).reverse().map((node, idx) => (
-          <div key={node._id || idx} style={{ backgroundColor: '#1f2028', padding: '15px', marginBottom: '10px', borderRadius: '8px' }}>
-            <h3 style={{ margin: '0 0 8px 0', color: '#f8fafc', textTransform: 'uppercase', fontSize: '14px' }}>
+          <div key={node._id || idx}
+          onClick={()=>{
+            if(node?.location?.coordinates)
+            {
+              const [lng,lat]=node.location.coordinates;
+              setSelectedCoords([lat,lng]);
+            }
+          }} 
+          style={{ 
+            backgroundColor: '#1f2028', 
+            padding: '15px', 
+            marginBottom: '10px', 
+            borderRadius: '8px' 
+            }}>
+            <h3 style={{
+               margin: '0 0 8px 0', 
+               color: '#f8fafc', 
+               textTransform: 'uppercase',
+                fontSize: '14px' }}>
               {node.disaster_type || 'UNKNOWN ALERT'}
             </h3>
-            <h3 style={{ margin: '0 0 8px 0', color: (node.severity === 'CRITICAL' || node.severity === 'HIGH') ? '#ef4444' : '#fbbf24', fontSize: '12px' }}>
+            <h3 style={{
+               margin: '0 0 8px 0', 
+               color: (node.severity === 'CRITICAL' || node.severity === 'HIGH') ? '#ef4444' : '#fbbf24', 
+               fontSize: '12px' }}>
               Severity: {node.severity}
             </h3>
-            <p style={{ margin: 0, color: '#9ca3af', fontSize: '13px', lineHeight: '1.4' }}>
+            <p style={{ 
+              margin: 0,
+               color: '#9ca3af', 
+               fontSize: '13px', 
+               lineHeight: '1.4' }}>
               {node.rawText}
             </p>
           </div>
@@ -152,7 +189,7 @@ return (
       </div>
     </div>
 
-    {/* Map Container Wrapper (Flexbox handles the sizing automatically) */}
+    
     <div style={{ flex: 1, height: '100vh', margin: 0, padding: 0 }}>
       <MapContainer
         center={[20.5937, 78.9629]} 
@@ -163,6 +200,9 @@ return (
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           attribution='&copy; OpenStreetMap contributors'
         />
+      
+        <MapFlyController target={selectedCoords}/>
+        //
         {
           emergencies.map((node, idx) => {
             if (!node?.location?.coordinates) return null;
@@ -182,7 +222,10 @@ return (
                   <strong>{node.disaster_type || 'Emergency'}</strong><br />
                   Severity: {node.severity}<br />
                   Reports: {node.incident_count}
-                  <button onClick={()=>handleResolve(node._id)}
+                  <button onClick={()=>{
+                  e.stopPropagation();//prevents bubbling up to the parent marker
+                  handleResolve(node._id)
+                  }}
                     style={{
                     marginTop: '8px',
                     padding: '6px 12px',
