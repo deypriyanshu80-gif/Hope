@@ -1,4 +1,4 @@
-# Dynamic Disaster Triage & Logistics Grid
+# Hope
 
 A distributed, event-driven disaster ingestion and spatial triage command center built to absorb high-throughput emergency message bursts, extract structured GeoJSON via background LLM workers, deduplicate nearby incidents atomically, and stream real-time tactical updates to a live map.
 
@@ -6,7 +6,8 @@ A distributed, event-driven disaster ingestion and spatial triage command center
 
 ## System Architecture
 
-![System Architecture](./docs/architecture.png)
+<img width="1173" height="951" alt="Disaster Triage   Logistics Architecture" src="https://github.com/user-attachments/assets/44926d7a-98e2-49ea-8dd7-c0718d385215" />
+
 
 ### End-to-End Data Pipeline
 1. **Chaos Simulator (`apps/chaos-simulator`)**: Blasts `500+ requests/sec` of noisy, unstructured emergency distress text at the ingestion endpoint to stress-test backpressure and concurrency.
